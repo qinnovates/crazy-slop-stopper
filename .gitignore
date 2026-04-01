@@ -1,0 +1,33 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Secrets
+*.pem
+*.key
+credentials.*
+*secret*
+
+# Private working state
+_memory/
+
+# Node (future CLI)
+node_modules/
+dist/
+*.tgz
+
+# Python (future CLI)
+__pycache__/
+*.pyc
+.venv/
