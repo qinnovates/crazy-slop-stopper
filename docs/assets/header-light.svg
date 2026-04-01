@@ -1,50 +1,93 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="700" height="180" viewBox="0 0 700 180">
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="200" viewBox="0 0 700 200">
   <defs>
-    <linearGradient id="topbar" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#D70015"/>
-      <stop offset="25%" stop-color="#D84315"/>
-      <stop offset="50%" stop-color="#E65100"/>
-      <stop offset="75%" stop-color="#C77800"/>
-      <stop offset="100%" stop-color="#EF6C00"/>
-    </linearGradient>
-    <linearGradient id="botbar" x1="100%" y1="0%" x2="0%" y2="0%">
-      <stop offset="0%" stop-color="#D70015"/>
-      <stop offset="25%" stop-color="#D84315"/>
-      <stop offset="50%" stop-color="#E65100"/>
-      <stop offset="75%" stop-color="#C77800"/>
-      <stop offset="100%" stop-color="#EF6C00"/>
-    </linearGradient>
-    <linearGradient id="title" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#D70015"/>
-      <stop offset="50%" stop-color="#E65100"/>
-      <stop offset="100%" stop-color="#EF6C00"/>
-    </linearGradient>
-    <filter id="innershadow">
-      <feComponentTransfer in="SourceAlpha">
-        <feFuncA type="table" tableValues="1 0"/>
-      </feComponentTransfer>
-      <feGaussianBlur stdDeviation="2"/>
-      <feOffset dx="0" dy="1" result="shadow"/>
-      <feFlood flood-color="#300500" flood-opacity="0.4"/>
-      <feComposite in2="shadow" operator="in"/>
-      <feComposite in2="SourceGraphic" operator="over"/>
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+  <stop offset="0%" stop-color="#D70015"/>
+  <stop offset="50%" stop-color="#E65100"/>
+  <stop offset="100%" stop-color="#EF6C00"/>
+</linearGradient>
+    <linearGradient id="lightBar" x1="0%" y1="0%" x2="100%" y2="0%">
+  <stop offset="0%" stop-color="#D70015"/>
+  <stop offset="50%" stop-color="#D84315"/>
+  <stop offset="100%" stop-color="#C77800"/>
+</linearGradient>
+
+    <!-- Glass frost filter -->
+    <filter id="glassFrost" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="blur"/>
+      <feFlood flood-color="rgba(255,69,58,0.03)" result="fill"/>
+      <feComposite in="fill" in2="blur" operator="in" result="frosted"/>
+      <feComposite in="frosted" in2="SourceGraphic" operator="over"/>
     </filter>
+
+    <!-- Light bar glow -->
+    <filter id="lightGlow" x="-20%" y="-200%" width="140%" height="600%">
+      <feGaussianBlur stdDeviation="8" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Title glow -->
+    <filter id="titleGlow" x="-5%" y="-20%" width="110%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Inner highlight on glass -->
+    <linearGradient id="innerHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.08"/>
+      <stop offset="50%" stop-color="white" stop-opacity="0.01"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0.04"/>
+    </linearGradient>
   </defs>
 
-  <!-- Top border -->
-  <rect x="8" y="2" width="684" height="8" rx="4" ry="4" fill="url(#topbar)" filter="url(#innershadow)" stroke="#300500" stroke-width="0.5"/>
-  <text x="680" y="8" font-family="monospace" font-size="3.5" fill="#ffffff" opacity="0.08" text-anchor="end">KevQ</text>
+  <!-- Glass panel -->
+  <rect x="20" y="16" width="660" height="168"
+        rx="24" ry="24"
+        fill="rgba(255,69,58,0.03)"
+        stroke="rgba(255,69,58,0.08)" stroke-width="1"/>
+
+  <!-- Inner highlight layer -->
+  <rect x="20" y="16" width="660" height="168"
+        rx="24" ry="24"
+        fill="url(#innerHighlight)"/>
+
+  <!-- Light bar (Turrell-inspired) -->
+  <rect x="44" y="20" width="612" height="5"
+        rx="2.5" ry="2.5"
+        fill="url(#lightBar)" opacity="0.45"
+        filter="url(#lightGlow)"/>
 
   <!-- Title -->
-  <text x="350" y="68" font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', 'Segoe UI', sans-serif" font-size="40" font-weight="300" fill="url(#title)" text-anchor="middle" letter-spacing="12">VIBECHECK</text>
+  <text x="350.0" y="83.2"
+        font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', 'Segoe UI', sans-serif"
+        font-size="42" font-weight="200"
+        fill="url(#titleGrad)" text-anchor="middle"
+        letter-spacing="14"
+        filter="url(#titleGlow)">VIBECHECK</text>
 
   <!-- Subtitle -->
-  <text x="350" y="98" font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif" font-size="16" font-weight="300" fill="#6E6E73" text-anchor="middle" letter-spacing="6">vibecheck-slop-stopper</text>
+  <text x="350.0" y="113.2"
+        font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif"
+        font-size="14" font-weight="300"
+        fill="#86868B" text-anchor="middle"
+        letter-spacing="5">vibecheck-slop-stopper</text>
 
   <!-- Tagline -->
-  <text x="350" y="128" font-family="'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif" font-size="12" font-weight="300" fill="#86868B" text-anchor="middle" letter-spacing="2">Stand out amongst the rest, detect AI-slop code as you test.</text>
+  <text x="350.0" y="137.2"
+        font-family="'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif"
+        font-size="11" font-weight="300"
+        fill="#AEAEB2" text-anchor="middle"
+        letter-spacing="1.5">Stand out amongst the rest, detect AI-slop code as you test.</text>
 
-  <!-- Bottom border -->
-  <rect x="8" y="170" width="684" height="8" rx="4" ry="4" fill="url(#botbar)" filter="url(#innershadow)" stroke="#300500" stroke-width="0.5"/>
-  <text x="680" y="176" font-family="monospace" font-size="3.5" fill="#ffffff" opacity="0.08" text-anchor="end">KevQ</text>
+  <!-- Watermark -->
+  <text x="668" y="176"
+        font-family="monospace" font-size="3.5"
+        fill="#D70015" opacity="0.08"
+        text-anchor="end">KevQ</text>
 </svg>
