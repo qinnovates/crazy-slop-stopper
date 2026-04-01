@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE.md"><img src="https://img.shields.io/github/license/qinnovates/vibecheck-anti-vibecode?style=flat-square&color=FF453A" alt="License"></a>
+  <a href="LICENSE.md"><img src="https://img.shields.io/github/license/qinnovates/crazy-slop-stopper?style=flat-square&color=FF453A" alt="License"></a>
   <img src="https://img.shields.io/badge/patterns-11_core_+_25_grep-FF9F0A?style=flat-square" alt="Patterns">
   <img src="https://img.shields.io/badge/stacks-9_covered-FFB74D?style=flat-square" alt="Stacks">
 </p>
@@ -83,7 +83,7 @@ Plus **23 auto-fail security patterns** (S01-S23) and **25+ grep rules** (G110-G
 Copy the detection reference into your project:
 
 ```bash
-curl -o vibecode-detection.md https://raw.githubusercontent.com/qinnovates/vibecheck-anti-vibecode/main/vibecode-detection.md
+curl -o vibecode-detection.md https://raw.githubusercontent.com/qinnovates/crazy-slop-stopper/main/vibecode-detection.md
 ```
 
 Or reference it in your code review checklist. The patterns use **ripgrep** (Rust regex syntax) and can be run with any `rg`-compatible tool.
