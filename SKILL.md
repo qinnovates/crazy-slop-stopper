@@ -99,6 +99,31 @@ If the user requests a specific scope:
 - **MARK threshold at 5** — Swift `// MARK: -` is normal. Five in one file is AI saturation
 - **Visual slop needs 3+ co-occurring items** — purple alone isn't slop. Purple + centered + bubbly radius = AI aesthetic
 
+## --quorum: Adversarial Finding Review
+
+When the user says `vibecheck --quorum` or `vibecheck` and findings are ambiguous:
+
+1. Run vibecheck normally (Steps 1-5 above)
+2. Collect all findings into a structured summary
+3. Invoke `/quorum "Review these vibecheck findings for false positives, missed patterns, and severity accuracy" --artifact <findings-summary> --no-web`
+4. Quorum assembles a panel: FP Analyst, Security Reviewer, Code Quality Expert, Breaker
+5. Panel debates which findings are real vs noise, what was missed, and whether severities are correct
+6. Present the Quorum-vetted finding list to the user
+
+This is the adversarial layer. vibecheck catches patterns; Quorum decides which ones matter.
+
+### Reverse direction: /quorum --vibecheck
+
+From Quorum's side, when reviewing code:
+
+1. User runs `/quorum "Review this code" --artifact <file>`
+2. Quorum detects code review intent
+3. Quorum auto-invokes `vibecheck` as Phase 0 (pre-deliberation scan)
+4. Vibecheck findings feed into the panel as structured evidence
+5. Panel deliberates with vibecheck findings as input, not just their own analysis
+
+Both directions work. vibecheck is the grep engine; Quorum is the reasoning layer.
+
 ## Standalone CLI (for humans/CI)
 
 The Python package at `src/vibecheck/` wraps the same rules for terminal use:

@@ -63,3 +63,6 @@ FILE_SUMMARY    = "(?i)(?:///|//)\\s*This\\s+(?:file|view|struct|class)\\s+(?:de
 GENERIC_TODO    = "//\\s*TODO:\\s*(?:Add|Implement|Update|Refactor|Fix|Handle|Remove)\\b"
 OBVIOUS_COMMENT = "(?i)//\\s*(?:This|The|A|An)\\s+\\w+\\s+(?:is|are|was|has|will|should|can)\\b"
 MARK_TEMPLATE   = "//\\s*MARK:\\s*-\\s*(?:Properties|State|Body|Subviews|Helper|Private|Lifecycle|Preview|Methods)"
+
+# ── README slop ──────────────────────────────────────────
+README_GENERIC  = "^##\\s+(?:The Problem|The Solution|How It Works|Key Features|Why .+\\?|Getting Started|What Makes .+ (?:Special|Unique|Different)|Overview|Introduction|About)"

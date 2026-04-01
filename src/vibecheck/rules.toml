@@ -746,3 +746,12 @@ fp_risk  = "medium"
 category = "ai-slop"
 notes    = "// The user is authenticated — narrating what code already says. Narrowed to // not ///"
 two_pass = true
+
+[rule.G146]
+name      = "Generic README section headers"
+pattern   = "{README_GENERIC}"
+files     = ["*.md", "README*"]
+severity  = "medium"
+fp_risk   = "low"
+category  = "ai-slop"
+notes     = "## The Problem, ## The Solution, ## How It Works, ## Key Features — template headers that AI always generates. Real READMEs describe what the project does, not follow a formula"

@@ -75,7 +75,7 @@ vibecheck-slop-stopper/
 
 ---
 
-## How It Works
+## Atom/Stanza Engine
 
 **atoms.toml** defines reusable regex fragments by name:
 
