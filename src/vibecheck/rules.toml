@@ -1,0 +1,685 @@
+# ──────────────────────────────────────────────────────────
+# vibecheck — detection rules
+#
+# Each [rule.*] stanza compiles to a ripgrep command.
+# Patterns reference {ATOM_NAME} from atoms.toml.
+# ──────────────────────────────────────────────────────────
+
+
+# ═══════════════════════════════════════════════════════════
+#  SECURITY — secrets, injection, RCE
+# ═══════════════════════════════════════════════════════════
+
+[rule.G01]
+name     = "Hardcoded API key"
+pattern  = "{SECRET_ASSIGN}"
+files    = ["{ALL_SOURCE}"]
+severity = "critical"
+fp_risk  = "medium"
+category = "security"
+notes    = "Secrets in source code"
+
+[rule.G02]
+name     = "SQL f-string (Python)"
+pattern  = "f{STRING_OPEN}{SQL_KEYWORD}"
+files    = ["{PYTHON}"]
+severity = "critical"
+fp_risk  = "low"
+category = "security"
+notes    = "SQL injection via f-string"
+
+[rule.G03]
+name     = "SQL template literal (JS)"
+pattern  = "`{SQL_KEYWORD}.*\\$\\{"
+files    = ["*.{ts,js}"]
+severity = "critical"
+fp_risk  = "low"
+category = "security"
+notes    = "SQL injection via template literal"
+
+[rule.G04]
+name     = "eval() with variable"
+pattern  = "eval\\s*\\([^\"\\')]+\\)"
+files    = ["*.{ts,js,py}"]
+severity = "critical"
+fp_risk  = "low"
+category = "security"
+notes    = "Remote code execution"
+
+[rule.G05]
+name     = "new Function() with variable"
+pattern  = "new\\s+Function\\s*\\([^\"\\')]+\\)"
+files    = ["{JS_TS}"]
+severity = "critical"
+fp_risk  = "low"
+category = "security"
+notes    = "Remote code execution"
+
+[rule.G06]
+name     = "innerHTML with variable"
+pattern  = "\\.innerHTML\\s*=\\s*[^\"\\'<\\s]"
+files    = ["{JS_TS}"]
+severity = "high"
+fp_risk  = "medium"
+category = "security"
+notes    = "XSS via innerHTML"
+
+[rule.G07]
+name     = "dangerouslySetInnerHTML"
+pattern  = "dangerouslySetInnerHTML"
+files    = ["*.{jsx,tsx}"]
+severity = "high"
+fp_risk  = "medium"
+category = "security"
+notes    = "XSS via React escape hatch"
+
+[rule.G08]
+name     = "Disabled TLS (Node)"
+pattern  = "NODE_TLS_REJECT_UNAUTHORIZED\\s*=\\s*['\"]0['\"]"
+files    = ["*.{ts,js}"]
+severity = "critical"
+fp_risk  = "low"
+category = "security"
+notes    = "MITM via disabled TLS"
+
+[rule.G09]
+name     = "Disabled TLS (Python)"
+pattern  = "requests\\.\\w+\\(.*verify\\s*=\\s*False"
+files    = ["{PYTHON}"]
+severity = "high"
+fp_risk  = "medium"
+category = "security"
+notes    = "MITM via disabled cert verify"
+
+[rule.G10]
+name     = "pickle.loads"
+pattern  = "pickle\\.loads?\\("
+files    = ["{PYTHON}"]
+severity = "high"
+fp_risk  = "medium"
+category = "security"
+notes    = "Arbitrary code execution via deserialization"
+
+[rule.G11]
+name     = "Hardcoded encryption key"
+pattern  = "(?i)(?:encrypt|cipher|aes){ASSIGN}{STRING_OPEN}[^\"\\']{8,}{STRING_OPEN}"
+files    = ["{ALL_SOURCE}"]
+severity = "critical"
+fp_risk  = "medium"
+category = "security"
+notes    = "Encryption key in source"
+
+[rule.G17]
+name     = "CORS wildcard"
+pattern  = "allow_origin.*{STRING_OPEN}\\*{STRING_OPEN}|Access-Control-Allow-Origin.*\\*"
+files    = ["*.{ts,js,py,go,java}"]
+severity = "high"
+fp_risk  = "medium"
+category = "security"
+notes    = "Permissive CORS"
+
+[rule.G19]
+name     = "rm -rf with variable"
+pattern  = "rm\\s+-rf\\s+\\$"
+files    = ["{SHELL}"]
+severity = "critical"
+fp_risk  = "low"
+category = "security"
+notes    = "Catastrophic data loss"
+
+[rule.G20]
+name     = "Raw user input in prompt"
+pattern  = "f{STRING_OPEN}.*\\{user_input\\}|f{STRING_OPEN}.*\\{request\\."
+files    = ["{PYTHON}"]
+severity = "high"
+fp_risk  = "medium"
+category = "security"
+notes    = "Prompt injection"
+
+
+# ═══════════════════════════════════════════════════════════
+#  ERROR HANDLING — swallowed errors, untyped throws
+# ═══════════════════════════════════════════════════════════
+
+[rule.G21]
+name     = "Empty catch (JS)"
+pattern  = "catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}"
+files    = ["{JS_TS}"]
+severity = "high"
+fp_risk  = "low"
+category = "error-handling"
+notes    = "Silent error swallowing"
+
+[rule.G22]
+name     = "Empty except (Python)"
+pattern  = "except.*:\\s*$"
+files    = ["{PYTHON}"]
+severity = "high"
+fp_risk  = "low"
+category = "error-handling"
+notes    = "Two-pass: check next line is pass or ..."
+two_pass = true
+
+[rule.G25]
+name     = "Catch-swallow promise"
+pattern  = "\\.catch\\(\\s*\\(\\)\\s*=>\\s*\\{\\s*\\}\\s*\\)"
+files    = ["*.{ts,js}"]
+severity = "high"
+fp_risk  = "low"
+category = "error-handling"
+notes    = "Silent promise rejection"
+
+[rule.G26]
+name     = "String throw"
+pattern  = "throw\\s+['\"]"
+files    = ["*.{ts,js}"]
+severity = "high"
+fp_risk  = "low"
+category = "error-handling"
+notes    = "Untyped error"
+
+[rule.G28]
+name     = "Bare except (Python)"
+pattern  = "except\\s*:"
+files    = ["{PYTHON}"]
+severity = "high"
+fp_risk  = "low"
+category = "error-handling"
+notes    = "Catches everything including SystemExit"
+
+
+# ═══════════════════════════════════════════════════════════
+#  TYPESCRIPT — type system abuse
+# ═══════════════════════════════════════════════════════════
+
+[rule.G41]
+name     = "any type"
+pattern  = ":\\s*any\\b|<any>|as\\s+any"
+files    = ["*.{ts,tsx}"]
+severity = "high"
+fp_risk  = "low"
+category = "typescript"
+notes    = "Defeats the type system"
+
+[rule.G42]
+name     = "@ts-ignore no reason"
+pattern  = "//\\s*@ts-ignore\\s*$"
+files    = ["*.{ts,tsx}"]
+severity = "high"
+fp_risk  = "low"
+category = "typescript"
+notes    = "Suppression without justification"
+
+[rule.G43]
+name     = "Non-null assertion chain"
+pattern  = "!\\.\\w+!\\.\\w+"
+files    = ["*.{ts,tsx}"]
+severity = "high"
+fp_risk  = "low"
+category = "typescript"
+notes    = "Cascading unsafe access"
+
+[rule.G44]
+name     = "Index signature backdoor"
+pattern  = "\\[key:\\s*string\\]:\\s*any"
+files    = ["*.{ts,tsx}"]
+severity = "high"
+fp_risk  = "low"
+category = "typescript"
+notes    = "Type system escape hatch"
+
+
+# ═══════════════════════════════════════════════════════════
+#  PYTHON — mutable defaults, shell injection, crypto
+# ═══════════════════════════════════════════════════════════
+
+[rule.G49]
+name     = "Mutable default arg"
+pattern  = "{FUNC_DEF_PY}.*=\\s*\\[\\]|{FUNC_DEF_PY}.*=\\s*\\{\\}"
+files    = ["{PYTHON}"]
+severity = "high"
+fp_risk  = "low"
+category = "python"
+notes    = "Shared mutable default"
+
+[rule.G52]
+name     = "Django DEBUG=True"
+pattern  = "DEBUG\\s*=\\s*True"
+files    = ["*/settings*.py"]
+severity = "critical"
+fp_risk  = "low"
+category = "python"
+notes    = "Debug mode in settings"
+
+[rule.G57]
+name     = "subprocess shell=True"
+pattern  = "subprocess\\.(?:run|call|Popen)\\(.*shell\\s*=\\s*True"
+files    = ["{PYTHON}"]
+severity = "high"
+fp_risk  = "medium"
+category = "python"
+notes    = "Shell injection risk"
+
+[rule.G58]
+name     = "os.system call"
+pattern  = "os\\.system\\("
+files    = ["{PYTHON}"]
+severity = "high"
+fp_risk  = "low"
+category = "python"
+notes    = "Shell injection risk"
+
+[rule.G66]
+name     = "AES ECB mode"
+pattern  = "MODE_ECB|mode.*ECB"
+files    = ["{PYTHON}"]
+severity = "critical"
+fp_risk  = "low"
+category = "python"
+notes    = "Insecure block cipher mode"
+
+
+# ═══════════════════════════════════════════════════════════
+#  REACT / NEXT.JS
+# ═══════════════════════════════════════════════════════════
+
+[rule.G76]
+name     = "Async useEffect"
+pattern  = "useEffect\\s*\\(\\s*async"
+files    = ["*.{jsx,tsx}"]
+severity = "high"
+fp_risk  = "low"
+category = "react"
+notes    = "Memory leak from async effect"
+
+[rule.G77]
+name     = "next/router in app dir"
+pattern  = "from\\s+['\"]next/router['\"]"
+files    = ["app/**/*.{ts,tsx}"]
+severity = "high"
+fp_risk  = "low"
+category = "react"
+notes    = "Pages Router API in App Router"
+
+[rule.G79]
+name     = "NEXT_PUBLIC_ on secrets"
+pattern  = "NEXT_PUBLIC_.*{SECRET_NAME}"
+files    = ["*.env*"]
+severity = "critical"
+fp_risk  = "medium"
+category = "react"
+notes    = "Secret exposed to client bundle"
+
+
+# ═══════════════════════════════════════════════════════════
+#  SWIFT / iOS
+# ═══════════════════════════════════════════════════════════
+
+[rule.G63]
+name     = "Swift force try"
+pattern  = "try!"
+files    = ["{SWIFT}"]
+severity = "high"
+fp_risk  = "low"
+category = "swift"
+notes    = "Runtime crash on error"
+
+[rule.G64]
+name     = "Swift force cast"
+pattern  = "\\bas!\\b"
+files    = ["{SWIFT}"]
+severity = "high"
+fp_risk  = "low"
+category = "swift"
+notes    = "Runtime crash on type mismatch"
+
+[rule.G101]
+name     = "Swift print in production"
+pattern  = "\\bprint\\("
+files    = ["{SWIFT}"]
+severity = "medium"
+fp_risk  = "medium"
+category = "swift"
+notes    = "Use structured logger"
+
+[rule.G104]
+name     = "UserDefaults for secrets"
+pattern  = "UserDefaults.*{SECRET_NAME}"
+files    = ["{SWIFT}"]
+severity = "high"
+fp_risk  = "low"
+category = "swift"
+notes    = "Secrets in unencrypted storage"
+
+[rule.G106]
+name     = "NavigationView (deprecated)"
+pattern  = "NavigationView\\s*\\{"
+files    = ["{SWIFT}"]
+severity = "medium"
+fp_risk  = "low"
+category = "swift"
+notes    = "Use NavigationStack"
+
+[rule.G107]
+name     = "nonisolated(unsafe)"
+pattern  = "nonisolated\\(unsafe\\)"
+files    = ["{SWIFT}"]
+severity = "high"
+fp_risk  = "low"
+category = "swift"
+notes    = "Concurrency safety bypass"
+
+
+# ═══════════════════════════════════════════════════════════
+#  DOCKER / K8S / IAC
+# ═══════════════════════════════════════════════════════════
+
+[rule.G67]
+name     = "FROM :latest"
+pattern  = "FROM\\s+\\w+:latest"
+files    = ["{DOCKER}"]
+severity = "medium"
+fp_risk  = "low"
+category = "docker"
+notes    = "Unpinned base image"
+
+[rule.G70]
+name     = "K8s privileged"
+pattern  = "privileged:\\s*true"
+files    = ["{K8S}"]
+severity = "critical"
+fp_risk  = "low"
+category = "docker"
+notes    = "Full container escape"
+
+[rule.G71]
+name     = "K8s hostPath /"
+pattern  = "path:\\s*[\"'/][\"']"
+files    = ["{K8S}"]
+severity = "critical"
+fp_risk  = "low"
+category = "docker"
+notes    = "Host filesystem access"
+
+[rule.G73]
+name     = "uvicorn --reload prod"
+pattern  = "uvicorn.*--reload"
+files    = ["{DOCKER}"]
+severity = "high"
+fp_risk  = "medium"
+category = "docker"
+notes    = "Hot reload in production"
+
+
+# ═══════════════════════════════════════════════════════════
+#  AI / LLM — model pinning, prompt security
+# ═══════════════════════════════════════════════════════════
+
+[rule.G86]
+name     = "Unpinned model version"
+pattern  = "model{ASSIGN}{STRING_OPEN}{LLM_MODEL}{STRING_OPEN}"
+files    = ["*.{py,ts,js}"]
+severity = "medium"
+fp_risk  = "low"
+category = "ai-llm"
+notes    = "Model version will drift"
+
+[rule.G87]
+name     = "JSON.parse LLM response"
+pattern  = "JSON\\.parse\\(\\w*[Rr]espon"
+files    = ["*.{ts,js}"]
+severity = "high"
+fp_risk  = "medium"
+category = "ai-llm"
+notes    = "LLM output is not guaranteed JSON"
+
+[rule.G88]
+name     = "Credential in prompt"
+pattern  = "(?i:api[_-]?key|password|secret).*prompt\\s*="
+files    = ["*.{py,ts,js}"]
+severity = "critical"
+fp_risk  = "medium"
+category = "ai-llm"
+notes    = "Secret sent to LLM provider"
+
+
+# ═══════════════════════════════════════════════════════════
+#  AI SLOP — language tells in comments/strings
+# ═══════════════════════════════════════════════════════════
+
+[rule.G110]
+name      = "LLM vocabulary density"
+pattern   = "{COMMENT}.*{BANNED_WORD}"
+files     = ["{ALL_SOURCE}"]
+severity  = "medium"
+fp_risk   = "high"
+category  = "ai-slop"
+notes     = "Flag 3+ banned words in same file, not individual matches"
+mode      = "co-occurrence"
+threshold = 3
+
+[rule.G111]
+name      = "LLM vocabulary in strings"
+pattern   = "{STRING_OPEN}.*{BANNED_WORD}"
+files     = ["{JS_TS}", "{PYTHON}", "{SWIFT}"]
+severity  = "medium"
+fp_risk   = "high"
+category  = "ai-slop"
+notes     = "Co-occurrence model. Skip i18n files"
+mode      = "co-occurrence"
+threshold = 3
+
+[rule.G112]
+name     = "Restatement comment"
+pattern  = "{COMMENT_SL}\\s*{RESTATE_VERB}\\s+(?:{ARTICLE}\\s+)?\\w+"
+files    = ["{ALL_SOURCE}"]
+severity = "medium"
+fp_risk  = "high"
+category = "ai-slop"
+notes    = "Two-pass: verify next line does what comment says"
+two_pass = true
+
+[rule.G113]
+name     = "Markdown in code comments"
+pattern  = "{COMMENT}\\\\s*(?:\\*\\*\\w+\\*\\*|- \\w|## )"
+files    = ["*.{ts,js,py,swift,go,rs}"]
+severity = "low"
+fp_risk  = "low"
+category = "ai-slop"
+notes    = "Markdown formatting has no business in source code"
+
+[rule.G114]
+name     = "Step-numbered comments"
+pattern  = "{COMMENT}\\\\s*Step\\\\s+\\d+\\\\s*:"
+files    = ["{ALL_SOURCE}"]
+severity = "medium"
+fp_risk  = "low"
+category = "ai-slop"
+notes    = "LLMs produce Step 1/2/3 as implementation plans. Humans almost never do this"
+
+[rule.G119]
+name      = "MARK comment saturation"
+pattern   = "// MARK: -"
+files     = ["{SWIFT}"]
+severity  = "medium"
+fp_risk   = "high"
+category  = "ai-slop"
+notes     = "AI saturates files with MARK sections. Flag files with 5+"
+mode      = "co-occurrence"
+threshold = 5
+
+
+# ═══════════════════════════════════════════════════════════
+#  PSEUDOCODE — non-compilable sketch code
+# ═══════════════════════════════════════════════════════════
+
+[rule.G115]
+name     = "Pseudocode keywords"
+pattern  = "{PSEUDO_KW}"
+files    = ["{ALL_SOURCE}"]
+severity = "high"
+fp_risk  = "low"
+category = "pseudocode"
+notes    = "Not valid in any modern language"
+
+[rule.G116]
+name     = "Ellipsis as implementation"
+pattern  = "{ELLIPSIS_BODY}"
+files    = ["*.{ts,js,swift,go,rs,java,kt}"]
+severity = "high"
+fp_risk  = "low"
+category = "pseudocode"
+notes    = "LLM gave up. Excludes Python (Ellipsis is valid syntax)"
+
+[rule.G117]
+name     = "Natural language function body"
+pattern  = "(?i)^\\s*{COMMENT_SL}\\s*{NATURAL_LANG}"
+files    = ["{ALL_SOURCE}"]
+severity = "high"
+fp_risk  = "low"
+category = "pseudocode"
+notes    = "English instructions where implementation should be"
+
+[rule.G118]
+name     = "Arrow notation in code"
+pattern  = "{UNICODE_ARROW}"
+files    = ["{ALL_SOURCE}"]
+severity = "high"
+fp_risk  = "low"
+category = "pseudocode"
+notes    = "Unicode arrows as pseudocode operators"
+
+
+# ═══════════════════════════════════════════════════════════
+#  VISUAL SLOP — generic AI-generated UI
+# ═══════════════════════════════════════════════════════════
+
+[rule.G120]
+name     = "AI purple gradient"
+pattern  = "(?i)linear-gradient.*{AI_PURPLE_HEX}"
+files    = ["{CSS}"]
+severity = "medium"
+fp_risk  = "medium"
+category = "visual-slop"
+notes    = "The #1 AI color tell"
+
+[rule.G121]
+name      = "AI purple Tailwind"
+pattern   = "{AI_PURPLE_TW}"
+files     = ["{FRONTEND}"]
+severity  = "medium"
+fp_risk   = "high"
+category  = "visual-slop"
+notes     = "Only flag as P11 co-occurrence (3+ items), NOT standalone"
+mode      = "co-occurrence"
+threshold = 3
+
+[rule.G122]
+name     = "Centered text density"
+pattern  = "text-align:\\s*center|text-center"
+files    = ["{CSS}", "{FRONTEND}"]
+severity = "medium"
+fp_risk  = "high"
+category = "visual-slop"
+notes    = "Two-pass: flag if >60% of text containers are centered"
+two_pass = true
+
+[rule.G123]
+name     = "Uniform bubbly radius"
+pattern  = "border-radius:\\s*(?:16px|20px|24px|1rem|1\\.5rem)|rounded-(?:2xl|3xl)"
+files    = ["{CSS}", "{FRONTEND}"]
+severity = "low"
+fp_risk  = "high"
+category = "visual-slop"
+notes    = "Two-pass: flag if >80% use same large radius"
+two_pass = true
+
+[rule.G124]
+name     = "Generic hero copy"
+pattern  = "{HERO_COPY}"
+files    = ["{FRONTEND}", "{SWIFT}"]
+severity = "medium"
+fp_risk  = "low"
+category = "visual-slop"
+notes    = "Marketing slop"
+
+[rule.G126]
+name      = "Colored left border card"
+pattern   = "border-left:\\s*[2-4]px\\s+solid"
+files     = ["*.{css,scss}"]
+severity  = "low"
+fp_risk   = "high"
+category  = "visual-slop"
+notes     = "Only flag with 2+ other P11 items"
+mode      = "co-occurrence"
+threshold = 3
+
+[rule.G127]
+name     = "Default AI box-shadow"
+pattern  = "{AI_SHADOW}"
+files    = ["{CSS}"]
+severity = "low"
+fp_risk  = "medium"
+category = "visual-slop"
+notes    = "The most common AI shadow value"
+
+[rule.G128]
+name     = "Glassmorphism blur"
+pattern  = "{GLASSMORPHISM}"
+files    = ["{CSS}"]
+severity = "low"
+fp_risk  = "medium"
+category = "visual-slop"
+notes    = "Very 2023-AI aesthetic"
+
+
+# ═══════════════════════════════════════════════════════════
+#  DOC SLOP — AI docstring/comment patterns
+# ═══════════════════════════════════════════════════════════
+
+[rule.G130]
+name     = '"This function/method/class" docstring'
+pattern  = "^\\s*{COMMENT_DOC}\\s*{DOC_NOUN_START}\\s"
+files    = ["*.{ts,js,py,swift,rs}"]
+severity = "medium"
+fp_risk  = "low"
+category = "ai-slop"
+notes    = "LLMs open every docstring with 'This X does Y'"
+
+[rule.G131]
+name     = "Param doc restates name"
+pattern  = "@param\\s+(\\w+)\\s+[-–]\\s+[Tt]he\\s+\\1"
+files    = ["*.{ts,js}"]
+severity = "medium"
+fp_risk  = "low"
+category = "ai-slop"
+notes    = "@param name - The name"
+
+[rule.G132]
+name     = "Section divider comments"
+pattern  = "{COMMENT}\\s*={4,}\\s*\\w+\\s*={4,}"
+files    = ["*.{ts,js,swift,rs}"]
+severity = "low"
+fp_risk  = "low"
+category = "ai-slop"
+notes    = "LLM organizational tic"
+
+[rule.G133]
+name      = "Hardcoded mock return"
+pattern   = "return\\s+\\[\\s*\\{\\s*id:\\s*[12],\\s*name:"
+files     = ["{JS_TS}"]
+severity  = "high"
+fp_risk   = "low"
+category  = "pseudocode"
+notes     = "Returning [{id: 1, name: ...}] as implementation"
+
+[rule.G134]
+name      = "Restatement docstring (Returns/Creates/Gets)"
+pattern   = "{COMMENT_DOC}\\s*{DOC_VERB}\\s+{ARTICLE}\\s+\\w+"
+files     = ["*.{ts,js,swift,rs,py}"]
+severity  = "medium"
+fp_risk   = "medium"
+category  = "ai-slop"
+notes     = "Flag files with 5+ restatement docstrings"
+mode      = "co-occurrence"
+threshold = 5

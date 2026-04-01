@@ -1,0 +1,56 @@
+# ──────────────────────────────────────────────────────────
+# vibecheck — pattern atoms
+# Reusable building blocks. Rules compose these by name.
+# All atoms expand to ripgrep Rust regex at scan time.
+# ──────────────────────────────────────────────────────────
+
+[atoms]
+
+# ── Comment prefixes ──────────────────────────────────────
+COMMENT         = "(?:///|//|#|/\\*|\"\"\"|''')"
+COMMENT_SL      = "(?:///|//)"
+COMMENT_DOC     = "(?:///|/?\\*\\*?|\\*)"
+
+# ── File groups ───────────────────────────────────────────
+ALL_SOURCE      = "*.{ts,js,py,swift,go,rs,java,kt}"
+JS_TS           = "*.{ts,js,jsx,tsx}"
+PYTHON          = "*.py"
+SWIFT           = "*.swift"
+CSS             = "*.{css,scss,tsx,jsx}"
+FRONTEND        = "*.{tsx,jsx,html,vue,svelte}"
+DOCKER          = "Dockerfile*"
+K8S             = "*.yml"
+SHELL           = "*.{sh,bash,zsh}"
+
+# ── Vocabulary ────────────────────────────────────────────
+BANNED_WORD     = "(?i)\\b(?:delve|robust|comprehensive|leverage|utilize|seamlessly|paramount|meticulously|bolster|harness|furthermore|moreover|pivotal|tapestry|foster|showcase|endeavor)\\b"
+SECRET_NAME     = "(?i)(?:token|key|secret|password|credential|api[_-]?key)"
+SECRET_ASSIGN   = "(?i)(?:api[_-]?key|secret[_-]?key|access[_-]?token)\\s*[:=]\\s*[\"'][a-zA-Z0-9_/+\\-]{20,}[\"']"
+SQL_KEYWORD     = "(?:SELECT|INSERT|UPDATE|DELETE)"
+
+# ── Structure ─────────────────────────────────────────────
+STRING_OPEN     = "[\"']"
+FUNC_DEF_PY     = "def\\s+\\w+\\("
+ASSIGN          = "\\s*[:=]\\s*"
+ARTICLE         = "(?:the|a|an|all)"
+
+# ── Pseudocode ────────────────────────────────────────────
+PSEUDO_KW       = "\\b(?:FOREACH|ENDFOR|ENDIF|ELSEIF|REPEAT\\s+UNTIL|PROCEDURE|ENDWHILE)\\b"
+ELLIPSIS_BODY   = "^\\s*(?:\\.{3}|//\\s*\\.{3}|#\\s*\\.{3}|/\\*\\s*\\.{3}\\s*\\*/)\\s*$"
+NATURAL_LANG    = "(?i)(?:do something|check if|loop through|handle the|process the|get the|send the|validate the|parse the|convert the)"
+UNICODE_ARROW   = "[→←⟶⟵]"
+
+# ── Visual slop ───────────────────────────────────────────
+AI_PURPLE_HEX   = "#(?:6366f1|7c3aed|8b5cf6|a855f7|7e22ce|6d28d9)"
+AI_PURPLE_TW    = "(?i)(?:from|via|to)-(?:purple|violet|indigo)-(?:400|500|600)"
+HERO_COPY       = "(?i)(?:unlock the power|your all-in-one|revolutionize your|welcome to .+|supercharge your|take .+ to the next level|streamline your)"
+AI_SHADOW       = "box-shadow:\\s*0\\s+4px\\s+6px\\s+rgba\\(0,\\s*0,\\s*0,\\s*0\\.1\\)"
+GLASSMORPHISM   = "backdrop-filter:\\s*blur\\(10px\\)"
+
+# ── Restatement verbs ─────────────────────────────────────
+RESTATE_VERB    = "(?i)(?:set|get|return|create|update|initialize)"
+DOC_VERB        = "(?:Returns?|Creates?|Gets?|Sets?|Updates?|Initializes?)"
+DOC_NOUN_START  = "(?i)This\\s+(?:function|method|class|module|struct|enum|protocol|view|encoder|helper|manager|service|component|is the)"
+
+# ── LLM model names ──────────────────────────────────────
+LLM_MODEL       = "(?:gpt-4|gpt-4o|claude-3|claude-4|gemini)"
