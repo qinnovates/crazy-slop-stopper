@@ -1,104 +1,113 @@
 ---
 name: vibecheck
-description: Detect AI-generated code patterns (vibecode, AI slop, pseudocode, visual slop) in any codebase using ripgrep-based detection rules.
+description: Scan codebase for AI-generated code patterns (vibecode, AI slop, pseudocode, visual slop) using atom-based detection rules.
 ---
 
 <!-- All your slop are belong to us -->
 
 # vibecheck
 
-Scan a codebase for AI-generated code patterns. 72 rules across 11 categories, compiled from human-readable TOML stanzas.
+Scan the current codebase for AI-generated code. You ARE the scanner — use your Grep tool to run the detection rules directly. No external dependencies needed.
 
-## When to Use This Skill
+## When to Activate
 
-- Before merging a PR that may contain AI-generated code
-- As a pre-commit or CI check
-- When reviewing code from contributors you haven't worked with
-- When onboarding a codebase you suspect was vibecoded
+- User says "vibecheck", "slop check", "check for AI code", "is this vibecoded"
+- Before merging a PR with AI-assisted code
+- When reviewing unfamiliar code
+- As part of `/review` Step 0 (vibecode detection)
 
-## Quick Start
+## How to Run
+
+### Step 1: Load the rules
+
+Read `atoms.toml` to get the named building blocks. Read `rules.toml` to get the detection stanzas. Expand `{ATOM_NAME}` references in each rule's `pattern` field by substituting the atom's regex value.
+
+### Step 2: Determine scope
+
+- If the user specified files or a directory, scan that
+- If running on a PR/diff, scan only changed files (`git diff --name-only`)
+- Otherwise, scan the current working directory
+
+### Step 3: Run rules via Grep
+
+For each rule in `rules.toml`:
+
+1. Expand the pattern by replacing `{ATOM}` references with values from `atoms.toml`
+2. Run the expanded regex using your **Grep tool** with the rule's `files` glob
+3. Collect matches with file path + line number + content
+
+**Co-occurrence rules** (`mode = "co-occurrence"`): Count matches per file. Only report files where the count meets the `threshold`. A single "robust" in a comment is noise. Three banned words in one file is signal.
+
+**Two-pass rules** (`two_pass = true`): The grep finds candidates. You then read the surrounding context (2-3 lines) and use judgment to confirm or dismiss. Do NOT report two-pass candidates without checking context.
+
+### Step 4: Report findings
+
+Group by severity. For each finding, report:
+
+```
+[SEVERITY] RULE_ID — Rule name
+  file:line
+  matching content (trimmed)
+  notes (if relevant)
+```
+
+**Severity tiers:**
+- **Critical** — blocks merge (phantom deps, hardcoded secrets, SQL injection)
+- **High** — fix before deploy (phantom symbols, force unwrap, mock returns)
+- **Medium** — fix this sprint (AI slop language, MARK saturation, restatement docs)
+- **Low** — log it (section dividers, glassmorphism, bubbly radius)
+
+### Step 5: Verdict
+
+End with a one-line pass/fail:
+
+- **PASS** — 0 critical, 0 high findings
+- **FAIL** — any critical or high findings present
+
+Include counts: `vibecheck: FAIL — 2 critical, 5 high, 12 medium, 3 low`
+
+## Rule Categories
+
+| Category | What It Catches | Atom Examples Used |
+|----------|----------------|--------------------|
+| `security` | Secrets, injection, RCE, XSS, disabled TLS | `{SECRET_ASSIGN}`, `{SQL_KEYWORD}` |
+| `error-handling` | Empty catch, bare except, swallowed promises | Direct regex |
+| `typescript` | `any` type, `@ts-ignore`, assertion chains | Direct regex |
+| `python` | Mutable defaults, shell injection, ECB mode | `{FUNC_DEF_PY}` |
+| `react` | Async useEffect, wrong router, exposed secrets | `{SECRET_NAME}` |
+| `swift` | Force try/cast, UserDefaults secrets, print() | `{SECRET_NAME}` |
+| `docker` | FROM :latest, privileged, hostPath / | Direct regex |
+| `ai-llm` | Unpinned models, JSON.parse response, creds in prompts | `{LLM_MODEL}`, `{STRING_OPEN}` |
+| `ai-slop` | LLM vocabulary, restatement comments, step-numbered, MARK saturation, "This function" docs | `{COMMENT}`, `{BANNED_WORD}`, `{DOC_NOUN_START}` |
+| `pseudocode` | FOREACH/ENDFOR, ellipsis bodies, natural language bodies, mock returns | `{PSEUDO_KW}`, `{ELLIPSIS_BODY}`, `{NATURAL_LANG}` |
+| `visual-slop` | Purple gradients, centered text, bubbly radius, hero copy, glassmorphism | `{AI_PURPLE_HEX}`, `{HERO_COPY}`, `{GLASSMORPHISM}` |
+
+## Filtering
+
+If the user requests a specific scope:
+
+- `vibecheck security` → only run rules with `category = "security"`
+- `vibecheck ai-slop` → only `ai-slop` category
+- `vibecheck --severity high` → only critical + high rules
+- `vibecheck <path>` → scan specific directory or file
+
+## Key Design Decisions
+
+- **Co-occurrence over individual matches** — banned words like "robust" and "comprehensive" are legitimate in isolation. Flag density, not presence
+- **Two-pass for context-dependent rules** — restatement comments need the next line to confirm. Don't auto-report
+- **Python excluded from G116 (ellipsis)** — `...` is valid Python for abstract methods and type stubs
+- **MARK threshold at 5** — Swift `// MARK: -` is normal. Five in one file is AI saturation
+- **Visual slop needs 3+ co-occurring items** — purple alone isn't slop. Purple + centered + bubbly radius = AI aesthetic
+
+## Standalone CLI (for humans/CI)
+
+The Python package at `src/vibecheck/` wraps the same rules for terminal use:
 
 ```bash
-# Scan current directory
-vibecheck .
-
-# Only critical and high severity
-vibecheck . --severity high
-
-# Show matching lines
-vibecheck . --context
-
-# Filter to AI slop detection only
-vibecheck . --category ai-slop
-
-# JSON output for CI pipelines
-vibecheck . --json
-
-# Strict mode: exit 1 on ANY finding
-vibecheck . --strict
+pip install -e .
+vibecheck .              # scan current dir
+vibecheck . --json       # CI-friendly output
+vibecheck . -c ai-slop   # category filter
 ```
 
-## Categories
-
-| Category | What It Catches |
-|----------|----------------|
-| `security` | Hardcoded secrets, SQL injection, eval, XSS, disabled TLS |
-| `error-handling` | Empty catch, bare except, swallowed promises, string throws |
-| `typescript` | `any` type, `@ts-ignore`, non-null chains, index backdoors |
-| `python` | Mutable defaults, shell injection, DEBUG=True, ECB mode |
-| `react` | Async useEffect, Pages Router in App Router, exposed secrets |
-| `swift` | Force try/cast, UserDefaults secrets, NavigationView, print() |
-| `docker` | FROM :latest, privileged containers, hostPath /, --reload |
-| `ai-llm` | Unpinned models, JSON.parse LLM response, credentials in prompts |
-| `ai-slop` | LLM vocabulary density, restatement comments, step-numbered comments, MARK saturation, "This function" docstrings |
-| `pseudocode` | FOREACH/ENDFOR keywords, ellipsis bodies, natural language function bodies, mock returns |
-| `visual-slop` | AI purple gradients, centered text density, bubbly radius, generic hero copy, glassmorphism |
-
-## Detection Modes
-
-### Direct Match
-Most rules fire on individual regex matches. One match = one finding.
-
-### Co-occurrence
-Rules marked `mode = "co-occurrence"` count matches per file. A single "robust" in a security comment is fine. Three banned LLM words in the same file is a signal.
-
-### Two-pass
-Rules marked `two_pass = true` produce candidates that need semantic follow-up. The grep finds the pattern; a human (or reviewer) confirms whether it's a real finding.
-
-## Architecture
-
-```
-atoms.toml  →  Named regex building blocks ({COMMENT}, {BANNED_WORD}, etc.)
-rules.toml  →  72 rules as readable stanzas: pattern = "{COMMENT}.*{BANNED_WORD}"
-patterns.py →  Compiler: expands atoms to ripgrep regex at import time
-scanner.py  →  Runs compiled rules via ripgrep subprocess, applies co-occurrence filtering
-cli.py      →  Terminal UI with severity colors, JSON mode, category filtering
-```
-
-Rules are TOML, not Python. Contributors add patterns by writing:
-
-```toml
-[rule.G999]
-name      = "My new pattern"
-pattern   = "{COMMENT}.*my_regex_here"
-files     = ["{SWIFT}"]
-severity  = "medium"
-fp_risk   = "low"
-category  = "ai-slop"
-notes     = "Why this matters"
-```
-
-No Python required. The compiler handles atom expansion.
-
-## Exit Codes
-
-| Code | Meaning |
-|------|---------|
-| 0 | Passed — no critical or high findings |
-| 1 | Failed — critical or high findings present (or `--strict` with any findings) |
-| 2 | Error — ripgrep not found, invalid target, etc. |
-
-## Requirements
-
-- Python 3.10+
-- [ripgrep](https://github.com/BurntSushi/ripgrep) (`rg`) installed and on PATH
+This is a separate distribution channel. The skill does not depend on it.
