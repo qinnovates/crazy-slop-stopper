@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE.md"><img src="https://img.shields.io/github/license/qinnovates/crazy-slop-stopper?style=flat-square&color=FF453A" alt="License"></a>
+  <a href="LICENSE.md"><img src="https://img.shields.io/github/license/qinnovates/vibecheck-slop-stopper?style=flat-square&color=FF453A" alt="License"></a>
   <img src="https://img.shields.io/badge/patterns-11_core_+_25_grep-FF9F0A?style=flat-square" alt="Patterns">
   <img src="https://img.shields.io/badge/stacks-9_covered-FFB74D?style=flat-square" alt="Stacks">
 </p>
@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: qinnovates/crazy-slop-stopper@main
+      - uses: qinnovates/vibecheck-slop-stopper@main
 ```
 
 That's it. Every PR gets scanned and commented.
@@ -102,7 +102,7 @@ That's it. Every PR gets scanned and commented.
 ### CLI (local / CI)
 
 ```bash
-pip install git+https://github.com/qinnovates/crazy-slop-stopper.git
+pip install git+https://github.com/qinnovates/vibecheck-slop-stopper.git
 vibecheck .                    # scan current dir
 vibecheck . --severity high    # only critical + high
 vibecheck . -c ai-slop         # just AI slop detection

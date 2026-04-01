@@ -58,7 +58,7 @@ runs:
 
     - name: Install vibecheck
       shell: bash
-      run: pip install -q git+https://github.com/qinnovates/crazy-slop-stopper.git
+      run: pip install -q git+https://github.com/qinnovates/vibecheck-slop-stopper.git
 
     - name: Run vibecheck
       id: scan
@@ -107,7 +107,7 @@ runs:
             await github.rest.issues.createComment({
               owner: context.repo.owner, repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: '### vibecheck: PASSED\n\nNo findings.\n\n---\n<sub>crazy-slop-stopper</sub>'
+              body: '### vibecheck: PASSED\n\nNo findings.\n\n---\n<sub>vibecheck-slop-stopper</sub>'
             });
             return;
           }
@@ -125,7 +125,7 @@ runs:
               body += `- ${emoji[s]} **${f.rule_id}** ${f.name} — \`${f.file}:${f.line}\`\n`;
             }
           }
-          body += `</details>\n\n---\n<sub>crazy-slop-stopper</sub>`;
+          body += `</details>\n\n---\n<sub>vibecheck-slop-stopper</sub>`;
           await github.rest.issues.createComment({
             owner: context.repo.owner, repo: context.repo.repo,
             issue_number: context.issue.number, body

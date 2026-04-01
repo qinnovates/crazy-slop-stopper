@@ -39,7 +39,7 @@
   <text x="350" y="68" font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', 'Segoe UI', sans-serif" font-size="40" font-weight="300" fill="url(#title)" text-anchor="middle" letter-spacing="12">VIBECHECK</text>
 
   <!-- Subtitle -->
-  <text x="350" y="98" font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif" font-size="16" font-weight="300" fill="#6E6E73" text-anchor="middle" letter-spacing="6">crazy-slop-stopper</text>
+  <text x="350" y="98" font-family="'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif" font-size="16" font-weight="300" fill="#6E6E73" text-anchor="middle" letter-spacing="6">vibecheck-slop-stopper</text>
 
   <!-- Tagline -->
   <text x="350" y="128" font-family="'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif" font-size="12" font-weight="300" fill="#86868B" text-anchor="middle" letter-spacing="2">Stand out amongst the rest, detect AI-slop code as you test.</text>

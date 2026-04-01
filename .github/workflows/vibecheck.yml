@@ -26,7 +26,7 @@ jobs:
           sudo dpkg -i ripgrep_14.1.1-1_amd64.deb
 
       - name: Install vibecheck
-        run: pip install git+https://github.com/qinnovates/crazy-slop-stopper.git
+        run: pip install git+https://github.com/qinnovates/vibecheck-slop-stopper.git
 
       - name: Get changed files
         id: changed
@@ -75,7 +75,7 @@ jobs:
                   `Scanned with ${summary.rules_run} rules. No findings at medium severity or above.`,
                   '',
                   '---',
-                  '<sub>crazy-slop-stopper by <a href="https://github.com/qinnovates">qinnovates</a></sub>'
+                  '<sub>vibecheck-slop-stopper by <a href="https://github.com/qinnovates">qinnovates</a></sub>'
                 ].join('\n')
               });
               return;
@@ -122,7 +122,7 @@ jobs:
             }
 
             body += `</details>\n\n`;
-            body += `---\n<sub>crazy-slop-stopper by <a href="https://github.com/qinnovates">qinnovates</a></sub>`;
+            body += `---\n<sub>vibecheck-slop-stopper by <a href="https://github.com/qinnovates">qinnovates</a></sub>`;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,

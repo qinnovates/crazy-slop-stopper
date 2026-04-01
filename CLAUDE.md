@@ -1,4 +1,4 @@
-# crazy-slop-stopper
+# vibecheck-slop-stopper
 
 ## What This Is
 
@@ -7,7 +7,7 @@ Vibecode detection reference — patterns and grep rules for identifying AI-gene
 ## Repository Structure
 
 ```
-crazy-slop-stopper/
+vibecheck-slop-stopper/
 ├── vibecode-detection.md    # Core detection reference
 ├── docs/assets/             # SVG headers (Red Orange skin)
 ├── README.md
