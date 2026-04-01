@@ -172,7 +172,7 @@ Three distribution channels — same rules, different runners:
 
 - [**ui-ux-pro-max**](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) — anti-pattern database for color/typography validation. P11 visual slop patterns sourced from its product-type reasoning engine
 - [**Quorum**](https://github.com/qinnovates/quorum) `--max --diverse` — cross-model adversarial review (Claude + Gemini 2.5 Pro + Codex/GPT-5.2). All v4 patterns were stress-tested by a 9-agent panel
-- **gstack** — design-checklist for visual slop patterns (10-item AI Slop Blacklist, banned vocabulary list, design scoring framework)
+- [**gstack**](https://github.com/garrytan/gstack) — design-checklist for visual slop patterns (10-item AI Slop Blacklist, banned vocabulary list, design scoring framework)
 
 ---
 
