@@ -1,0 +1,144 @@
+name: "vibecheck"
+description: "Detect AI-generated code patterns in your PRs"
+author: "qinnovates"
+
+branding:
+  icon: "shield"
+  color: "orange"
+
+inputs:
+  severity:
+    description: "Minimum severity to report (low, medium, high, critical)"
+    required: false
+    default: "medium"
+  category:
+    description: "Filter to specific category (comma-separated)"
+    required: false
+    default: ""
+  target:
+    description: "Directory to scan"
+    required: false
+    default: "."
+  fail-on:
+    description: "Fail the check on findings at this severity or above (high, critical, any, none)"
+    required: false
+    default: "high"
+  comment:
+    description: "Post results as PR comment (true/false)"
+    required: false
+    default: "true"
+
+outputs:
+  passed:
+    description: "Whether the scan passed (true/false)"
+    value: ${{ steps.scan.outputs.passed }}
+  findings:
+    description: "Number of findings"
+    value: ${{ steps.scan.outputs.findings }}
+  results-json:
+    description: "Path to JSON results file"
+    value: "/tmp/vibecheck-results.json"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install ripgrep
+      shell: bash
+      run: |
+        if ! command -v rg &> /dev/null; then
+          curl -sLO https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep_14.1.1-1_amd64.deb
+          sudo dpkg -i ripgrep_14.1.1-1_amd64.deb
+          rm ripgrep_14.1.1-1_amd64.deb
+        fi
+
+    - name: Install vibecheck
+      shell: bash
+      run: pip install -q git+https://github.com/qinnovates/crazy-slop-stopper.git
+
+    - name: Run vibecheck
+      id: scan
+      shell: bash
+      run: |
+        ARGS="${{ inputs.target }} --json --severity ${{ inputs.severity }}"
+
+        if [ -n "${{ inputs.category }}" ]; then
+          IFS=',' read -ra CATS <<< "${{ inputs.category }}"
+          for cat in "${CATS[@]}"; do
+            ARGS="$ARGS --category $(echo $cat | xargs)"
+          done
+        fi
+
+        if [ "${{ inputs.fail-on }}" = "any" ]; then
+          ARGS="$ARGS --strict"
+        fi
+
+        set +e
+        vibecheck $ARGS > /tmp/vibecheck-results.json 2>&1
+        EXIT_CODE=$?
+        set -e
+
+        # Parse results
+        FINDINGS=$(python3 -c "import json; d=json.load(open('/tmp/vibecheck-results.json')); print(len(d.get('findings',[])))" 2>/dev/null || echo "0")
+        PASSED=$(python3 -c "import json; d=json.load(open('/tmp/vibecheck-results.json')); print(str(d.get('passed',True)).lower())" 2>/dev/null || echo "true")
+
+        echo "findings=$FINDINGS" >> "$GITHUB_OUTPUT"
+        echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
+        echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+
+    - name: Post PR comment
+      if: inputs.comment == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          let results;
+          try {
+            results = JSON.parse(fs.readFileSync('/tmp/vibecheck-results.json', 'utf8'));
+          } catch (e) {
+            return;
+          }
+          const { summary, findings, passed } = results;
+          if (findings.length === 0) {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '### vibecheck: PASSED\n\nNo findings.\n\n---\n<sub>crazy-slop-stopper</sub>'
+            });
+            return;
+          }
+          const emoji = { critical: '🔴', high: '🟡', medium: '🔵', low: '⚪' };
+          const bySev = {};
+          for (const f of findings) { (bySev[f.severity] = bySev[f.severity] || []).push(f); }
+          let body = `### vibecheck: ${passed ? 'PASSED' : 'FAILED'}\n\n`;
+          body += `| Severity | Count |\n|----------|-------|\n`;
+          for (const s of ['critical','high','medium','low']) {
+            if (bySev[s]) body += `| ${emoji[s]} ${s} | ${bySev[s].length} |\n`;
+          }
+          body += `\n<details><summary>Findings (${findings.length})</summary>\n\n`;
+          for (const s of ['critical','high','medium','low']) {
+            for (const f of (bySev[s] || []).slice(0, 25)) {
+              body += `- ${emoji[s]} **${f.rule_id}** ${f.name} — \`${f.file}:${f.line}\`\n`;
+            }
+          }
+          body += `</details>\n\n---\n<sub>crazy-slop-stopper</sub>`;
+          await github.rest.issues.createComment({
+            owner: context.repo.owner, repo: context.repo.repo,
+            issue_number: context.issue.number, body
+          });
+
+    - name: Check threshold
+      if: inputs.fail-on != 'none'
+      shell: bash
+      run: |
+        if [ "${{ inputs.fail-on }}" = "any" ] && [ "${{ steps.scan.outputs.findings }}" -gt 0 ]; then
+          echo "vibecheck: FAILED — ${{ steps.scan.outputs.findings }} findings"
+          exit 1
+        elif [ "${{ steps.scan.outputs.passed }}" = "false" ]; then
+          echo "vibecheck: FAILED — critical or high findings present"
+          exit 1
+        fi

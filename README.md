@@ -80,13 +80,38 @@ Plus **23 auto-fail security patterns** (S01-S23) and **25+ grep rules** (G110-G
 
 ## Quick Start
 
-Copy the detection reference into your project:
+### GitHub Action (add to any repo)
 
-```bash
-curl -o vibecode-detection.md https://raw.githubusercontent.com/qinnovates/crazy-slop-stopper/main/vibecode-detection.md
+```yaml
+# .github/workflows/vibecheck.yml
+name: vibecheck
+on: [pull_request]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  vibecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: qinnovates/crazy-slop-stopper@main
 ```
 
-Or reference it in your code review checklist. The patterns use **ripgrep** (Rust regex syntax) and can be run with any `rg`-compatible tool.
+That's it. Every PR gets scanned and commented.
+
+### CLI (local / CI)
+
+```bash
+pip install git+https://github.com/qinnovates/crazy-slop-stopper.git
+vibecheck .                    # scan current dir
+vibecheck . --severity high    # only critical + high
+vibecheck . -c ai-slop         # just AI slop detection
+vibecheck . --json             # CI-friendly output
+```
+
+### Claude Code Skill
+
+Install as a skill and say `vibecheck` — Claude runs the patterns natively using its Grep tool. No dependencies.
 
 > [!NOTE]
 > All regex patterns are validated for ripgrep's Rust regex engine. No PCRE-only features.
@@ -122,9 +147,10 @@ vibecheck-anti-vibecode/
 └── .gitignore
 ```
 
-**Current scope:** Detection reference (patterns + grep rules). The detection engine is a document, not a runtime — it's designed to be consumed by code review tools, CI pipelines, or human reviewers.
-
-**Future:** GitHub App bot (`vibecheck-bot`) that runs these patterns on PRs automatically, like Dependabot but for AI slop.
+Three distribution channels — same rules, different runners:
+- **GitHub Action** — add to any repo, scans PRs, posts comments
+- **Python CLI** — local dev + CI pipelines (`vibecheck .`)
+- **Claude Code Skill** — Claude runs patterns natively via Grep tool
 
 </details>
 
@@ -135,8 +161,10 @@ vibecheck-anti-vibecode/
 | Phase | Status | Features |
 |-------|--------|----------|
 | 1 | Done | Core detection reference (P1-P11, S01-S23, G01-G133) |
-| 2 | Planned | CLI tool (`vibecheck scan .`) |
-| 3 | Planned | GitHub App bot (PR comments, like Dependabot) |
+| 2 | Done | CLI tool (`vibecheck .`) + atom/stanza pattern engine |
+| 3 | Done | GitHub Action (PR scanning + comments) |
+| 4 | Done | Claude Code Skill (SKILL.md) |
+| 5 | Planned | GitHub App (one-click install, Dependabot-style) |
 
 ---
 
