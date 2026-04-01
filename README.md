@@ -8,79 +8,19 @@
 
 <p align="center">
   <a href="LICENSE.md"><img src="https://img.shields.io/github/license/qinnovates/vibecheck-slop-stopper?style=flat-square&color=FF453A" alt="License"></a>
-  <img src="https://img.shields.io/badge/patterns-11_core_+_25_grep-FF9F0A?style=flat-square" alt="Patterns">
-  <img src="https://img.shields.io/badge/stacks-9_covered-FFB74D?style=flat-square" alt="Stacks">
+  <img src="https://img.shields.io/badge/rules-78-FF9F0A?style=flat-square" alt="Rules">
+  <img src="https://img.shields.io/badge/stacks-9-FFB74D?style=flat-square" alt="Stacks">
 </p>
 
 ---
 
-> [!TIP]
-> Use the detection patterns in your code review process. Copy `vibecode-detection.md` into your project, or reference it from your CI pipeline.
-
-## The Problem
-
-AI-generated code looks like it works but doesn't integrate with reality. It compiles (maybe) but calls nothing real, imports nothing installed, and follows patterns from a hallucinated API. We call this **vibecode**.
-
-Vibecheck detects it before it ships.
-
-## What It Detects
-
-```mermaid
-graph TD
-    A["P1-P4: Phantom Code"] --> E["Review Finding"]
-    B["P5-P8: Pattern Drift"] --> E
-    C["P9: AI Slop Language"] --> E
-    D["P10: Pseudocode"] --> E
-    F["P11: Visual Slop"] --> E
-
-    style A fill:#FF453A,stroke:#D70015,color:#fff
-    style B fill:#FF6B6B,stroke:#D84315,color:#000
-    style C fill:#FF8A65,stroke:#E65100,color:#000
-    style D fill:#FF9F0A,stroke:#C77800,color:#000
-    style F fill:#FFB74D,stroke:#EF6C00,color:#000
-    style E fill:#FF453A,stroke:#D70015,color:#fff
-```
-
----
-
-## Core Detection Patterns
-
-| ID | Pattern | Severity | What It Catches |
-|----|---------|----------|-----------------|
-| **P1** | Phantom Dependency | Critical | Import references a package not in the manifest |
-| **P2** | Phantom Module | Critical | Import references an internal file that doesn't exist |
-| **P3** | Phantom Symbol | High | Call references a function not exported by the target |
-| **P4** | Signature Mismatch | High | Function call with wrong args/types |
-| **P5** | Pattern Alien | Medium | Code uses patterns from a different project |
-| **P6** | Orphan Code | High | New code that nothing references |
-| **P7** | God File Dump | Medium | Single file with multiple responsibilities |
-| **P8** | Stub/Placeholder | Medium | LLM laziness markers where implementation should be |
-| **P9** | AI Slop Language | Medium | LLM verbal tics in comments/strings (co-occurrence) |
-| **P10** | Pseudocode | High | Non-compilable sketch code passed off as real |
-| **P11** | AI Visual Slop | Medium | Generic AI-generated UI patterns |
-
-Plus **23 auto-fail security patterns** (S01-S23) and **25+ grep rules** (G110-G133).
-
----
-
-## Stack Coverage
-
-| Stack | Coverage |
-|-------|----------|
-| TypeScript/React/Next.js | Full |
-| Python (Django/Flask/crypto) | Full |
-| Swift/iOS | Full |
-| Go | Partial |
-| Rust | Minimal |
-| Docker/K8s/IaC | Full |
-| CSS/Tailwind (visual slop) | Full |
-| AI/LLM patterns | Partial |
+78 grep rules that detect AI-generated code. Runs as a **GitHub Action** on PRs, a **CLI** locally, or a **Claude Code skill** natively. Patterns are defined in human-readable TOML — no regex authoring required to contribute.
 
 ---
 
 ## Quick Start
 
-### GitHub Action (add to any repo)
+### GitHub Action
 
 ```yaml
 # .github/workflows/vibecheck.yml
@@ -94,85 +34,172 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: qinnovates/vibecheck-slop-stopper@main
+      - uses: qinnovates/vibecheck-slop-stopper@v1
 ```
 
-That's it. Every PR gets scanned and commented.
-
-### CLI (local / CI)
+### CLI
 
 ```bash
 pip install git+https://github.com/qinnovates/vibecheck-slop-stopper.git
 vibecheck .                    # scan current dir
-vibecheck . --severity high    # only critical + high
-vibecheck . -c ai-slop         # just AI slop detection
-vibecheck . --json             # CI-friendly output
+vibecheck . --severity high    # critical + high only
+vibecheck . -c ai-slop         # one category
+vibecheck . --json             # CI output
+vibecheck . --strict           # exit 1 on any finding
 ```
 
 ### Claude Code Skill
 
-Install as a skill and say `vibecheck` — Claude runs the patterns natively using its Grep tool. No dependencies.
-
-> [!NOTE]
-> All regex patterns are validated for ripgrep's Rust regex engine. No PCRE-only features.
+Install as a skill. Say `vibecheck` — Claude runs every pattern natively with its Grep tool. No Python, no ripgrep dependency.
 
 ---
 
-## Features
+## What's in the Repo
 
-| Feature | Description |
-|---------|-------------|
-| **11 Core Patterns** | P1-P11 covering phantom code, pattern drift, AI slop, pseudocode, visual slop |
-| **23 Security Auto-Fails** | S01-S23 block merge unconditionally (hardcoded secrets, SQL injection, eval, etc.) |
-| **25+ Grep Rules** | G110-G133 with ripgrep-valid regex, FP risk ratings, and two-pass guidance |
-| **Co-occurrence Model** | P9 banned words use density scoring, not individual matches — reduces false positives |
-| **9 Stack Coverage** | TypeScript, Python, Swift, Go, Rust, Docker/K8s, CSS/Tailwind, AI/LLM |
-| **Quorum-Reviewed** | v4 stress-tested by 9-agent panel (Claude + Gemini + Codex) |
+```
+vibecheck-slop-stopper/
+├── src/vibecheck/
+│   ├── atoms.toml          ← 30+ named regex building blocks
+│   ├── rules.toml          ← 78 detection rules as TOML stanzas
+│   ├── patterns.py         ← compiler: atoms + rules → ripgrep regex
+│   ├── scanner.py          ← runs compiled rules via ripgrep subprocess
+│   └── cli.py              ← terminal UI (colors, JSON, filtering)
+├── action.yml              ← GitHub Action (composite, runs on caller's quota)
+├── SKILL.md                ← Claude Code skill definition
+├── vibecode-detection.md   ← full reference doc (P1-P11, S01-S23, all grep rules)
+├── CONTRIBUTING.md         ← how to add patterns
+├── pyproject.toml          ← pip install config
+└── .github/workflows/
+    └── vibecheck.yml       ← dogfood: runs vibecheck on our own PRs
+```
 
 ---
 
-<details>
-<summary><strong>Architecture</strong></summary>
+## How It Works
 
-```
-vibecheck-anti-vibecode/
-├── vibecode-detection.md    # The detection reference (core)
-├── docs/
-│   └── assets/
-│       ├── header-dark.svg
-│       └── header-light.svg
-├── README.md
-├── LICENSE.md
-├── CLAUDE.md
-└── .gitignore
+**atoms.toml** defines reusable regex fragments by name:
+
+```toml
+[atoms]
+COMMENT     = "(?:///|//|#|/\\*)"
+BANNED_WORD = "(?i)\\b(?:delve|robust|comprehensive|leverage|utilize|seamlessly)\\b"
+SWIFT       = "*.swift"
 ```
 
-Three distribution channels — same rules, different runners:
-- **GitHub Action** — add to any repo, scans PRs, posts comments
-- **Python CLI** — local dev + CI pipelines (`vibecheck .`)
-- **Claude Code Skill** — Claude runs patterns natively via Grep tool
+**rules.toml** composes atoms into detection stanzas:
 
-</details>
+```toml
+[rule.G110]
+name      = "LLM vocabulary density"
+pattern   = "{COMMENT}.*{BANNED_WORD}"
+files     = ["{SWIFT}", "*.{ts,js,py}"]
+severity  = "medium"
+category  = "ai-slop"
+mode      = "co-occurrence"
+threshold = 3
+```
+
+**patterns.py** compiles `{COMMENT}.*{BANNED_WORD}` into the full ripgrep regex at import time. Contributors write the TOML stanza — the compiler handles the rest.
+
+---
+
+## Detection Categories
+
+### Security (G01-G20) — 14 rules
+Hardcoded secrets, SQL injection, `eval()`, XSS, disabled TLS, `pickle.loads`, CORS wildcard, `rm -rf $VAR`, prompt injection.
+
+### Error Handling (G21-G28) — 5 rules
+Empty catch, bare except, swallowed promises, string throws.
+
+### TypeScript (G41-G44) — 4 rules
+`any` type, `@ts-ignore` without reason, non-null assertion chains, index signature backdoors.
+
+### Python (G49-G66) — 5 rules
+Mutable defaults, `DEBUG=True`, `subprocess shell=True`, `os.system`, AES ECB mode.
+
+### React/Next.js (G76-G79) — 3 rules
+Async useEffect, wrong router API, `NEXT_PUBLIC_` on secrets.
+
+### Swift/iOS (G63-G107) — 6 rules
+Force try/cast, `UserDefaults` for secrets, `NavigationView`, `nonisolated(unsafe)`, `print()`.
+
+### Docker/K8s (G67-G73) — 4 rules
+`FROM :latest`, `privileged: true`, `hostPath /`, `--reload` in Dockerfile.
+
+### AI/LLM (G86-G88) — 3 rules
+Unpinned model versions, `JSON.parse` on LLM response, credentials in prompts.
+
+### AI Slop Language (G110-G145) — 19 rules
+LLM vocabulary density (co-occurrence), restatement comments, markdown in comments, step-numbered comments, MARK template dumps, "This function/class" docstrings, param restating, section dividers, unicode box dividers, research citations in code, markdown tables in docstrings, file summary comments, generic TODOs, explanatory narration.
+
+### Pseudocode (G115-G133) — 5 rules
+`FOREACH`/`ENDFOR` keywords, bare ellipsis bodies, natural language function bodies, unicode arrows, hardcoded mock returns.
+
+### Visual Slop (G120-G128) — 9 rules
+AI purple gradients (hex + Tailwind), centered text density, bubbly border-radius, generic hero copy, emoji as design elements, colored left-border cards, default AI box-shadow, glassmorphism blur.
+
+---
+
+## Detection Modes
+
+| Mode | How It Works | Example |
+|------|-------------|---------|
+| **Direct** | One regex match = one finding | G140: unicode box dividers |
+| **Co-occurrence** | Counts per file, flags above threshold | G110: 3+ banned words in same file |
+| **Two-pass** | Grep finds candidates, reviewer confirms | G112: restatement comment + check next line |
+
+---
+
+## Severity + Exit Codes
+
+| Severity | Meaning | Action |
+|----------|---------|--------|
+| Critical | Secrets, injection, RCE | Blocks merge |
+| High | Runtime crash, auth bypass, mock data | Fix before deploy |
+| Medium | AI slop, pattern mismatch, stale docs | Fix this sprint |
+| Low | Style drift, minor decoration | Log it |
+
+| Exit | Meaning |
+|------|---------|
+| 0 | Passed — no critical/high |
+| 1 | Failed — critical or high present |
+| 2 | Error — rg not found, bad target |
+
+---
+
+## GitHub Action Config
+
+```yaml
+- uses: qinnovates/vibecheck-slop-stopper@v1
+  with:
+    severity: medium        # low | medium | high | critical
+    category: ""            # ai-slop,security (comma-separated)
+    fail-on: high           # high | critical | any | none
+    comment: "true"         # post PR comment with findings
+```
+
+The action runs on the **caller's** GitHub Actions quota, not ours. Same as `actions/checkout` — the action definition is fetched and cached by GitHub.
 
 ---
 
 ## Roadmap
 
-| Phase | Status | Features |
-|-------|--------|----------|
-| 1 | Done | Core detection reference (P1-P11, S01-S23, G01-G133) |
-| 2 | Done | CLI tool (`vibecheck .`) + atom/stanza pattern engine |
+| Phase | Status | What |
+|-------|--------|------|
+| 1 | Done | Detection reference (vibecode-detection.md) |
+| 2 | Done | CLI + atom/stanza TOML engine |
 | 3 | Done | GitHub Action (PR scanning + comments) |
 | 4 | Done | Claude Code Skill (SKILL.md) |
 | 5 | Planned | GitHub App (one-click install, Dependabot-style) |
+| 6 | Planned | `--quorum` flag for adversarial finding review |
 
 ---
 
 ## Credit
 
-- [**ui-ux-pro-max**](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) — anti-pattern database for color/typography validation. P11 visual slop patterns sourced from its product-type reasoning engine
-- [**Quorum**](https://github.com/qinnovates/quorum) `--max --diverse` — cross-model adversarial review (Claude + Gemini 2.5 Pro + Codex/GPT-5.2). All v4 patterns were stress-tested by a 9-agent panel
-- [**gstack**](https://github.com/garrytan/gstack) — design-checklist for visual slop patterns (10-item AI Slop Blacklist, banned vocabulary list, design scoring framework)
+- [**ui-ux-pro-max**](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) — anti-pattern database for color/typography validation. P11 visual slop patterns sourced from its reasoning engine
+- [**Quorum**](https://github.com/qinnovates/quorum) `--max --diverse` — cross-model adversarial review (Claude + Gemini 2.5 Pro + Codex/GPT-5.2). All patterns stress-tested by 9-agent panel
+- [**gstack**](https://github.com/garrytan/gstack) — AI Slop Blacklist, banned vocabulary list, design scoring framework
 
 ---
 
@@ -183,3 +210,4 @@ Three distribution channels — same rules, different runners:
 ---
 
 <p align="center">Built by <a href="https://github.com/qinnovates">qinnovates</a></p>
+<p align="center"><sub>README template from <a href="https://github.com/qinnovates/repo-design-kit">repo-design-kit</a></sub></p>
