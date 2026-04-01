@@ -159,12 +159,9 @@ def scan(
     result.rules_run = len(rules_to_run)
 
     for rule in rules_to_run:
-        glob_patterns = rule.glob.split(",") if "," in rule.glob else [rule.glob]
-
         all_matches: list[dict] = []
-        for glob_pattern in glob_patterns:
-            matches = _run_ripgrep(rule.regex, target, glob_pattern.strip(), rg_bin=rg_bin)
-            all_matches.extend(matches)
+        matches = _run_ripgrep(rule.regex, target, rule.glob, rg_bin=rg_bin)
+        all_matches.extend(matches)
 
         if rule.co_occurrence and rule.co_occurrence_threshold > 0:
             all_matches = _apply_co_occurrence_filter(

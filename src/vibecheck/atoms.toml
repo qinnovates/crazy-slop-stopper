@@ -54,3 +54,12 @@ DOC_NOUN_START  = "(?i)This\\s+(?:function|method|class|module|struct|enum|proto
 
 # ── LLM model names ──────────────────────────────────────
 LLM_MODEL       = "(?:gpt-4|gpt-4o|claude-3|claude-4|gemini)"
+
+# ── AI decoration ────────────────────────────────────────
+BOX_DRAWING     = "[╔║╚╗╝═]{3,}"
+RESEARCH_CITE   = "\\((?:Source|Research|PMC\\d|doi)\\b"
+MD_TABLE_ROW    = "///\\s*\\|[^|]+\\|.*\\|"
+FILE_SUMMARY    = "(?i)(?:///|//)\\s*This\\s+(?:file|view|struct|class)\\s+(?:defines|implements|contains|provides|manages|handles)\\b"
+GENERIC_TODO    = "//\\s*TODO:\\s*(?:Add|Implement|Update|Refactor|Fix|Handle|Remove)\\b"
+OBVIOUS_COMMENT = "(?i)//\\s*(?:This|The|A|An)\\s+\\w+\\s+(?:is|are|was|has|will|should|can)\\b"
+MARK_TEMPLATE   = "//\\s*MARK:\\s*-\\s*(?:Properties|State|Body|Subviews|Helper|Private|Lifecycle|Preview|Methods)"

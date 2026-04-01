@@ -498,15 +498,15 @@ category = "ai-slop"
 notes    = "LLMs produce Step 1/2/3 as implementation plans. Humans almost never do this"
 
 [rule.G119]
-name      = "MARK comment saturation"
-pattern   = "// MARK: -"
+name      = "MARK template dump"
+pattern   = "{MARK_TEMPLATE}"
 files     = ["{SWIFT}"]
 severity  = "medium"
-fp_risk   = "high"
+fp_risk   = "medium"
 category  = "ai-slop"
-notes     = "AI saturates files with MARK sections. Flag files with 5+"
+notes     = "Flag files with 4+ generic MARK sections (Properties/Body/Subviews/Helper/Preview). Single MARKs are idiomatic Swift"
 mode      = "co-occurrence"
-threshold = 5
+threshold = 4
 
 
 # ═══════════════════════════════════════════════════════════
@@ -683,3 +683,66 @@ category  = "ai-slop"
 notes     = "Flag files with 5+ restatement docstrings"
 mode      = "co-occurrence"
 threshold = 5
+
+
+# ═══════════════════════════════════════════════════════════
+#  AI DECORATION — Quorum v2 additions (2026-03-31)
+#  Patterns from SixDots analysis + Gemini + Codex review
+# ═══════════════════════════════════════════════════════════
+
+[rule.G140]
+name     = "Unicode box dividers"
+pattern  = "{BOX_DRAWING}"
+files    = ["{ALL_SOURCE}"]
+severity = "high"
+fp_risk  = "low"
+category = "ai-slop"
+notes    = "╔═══╗ box-drawing chars in source. Humans never type these. Zero FP"
+
+[rule.G141]
+name     = "Research citations in code comments"
+pattern  = "{RESEARCH_CITE}"
+files    = ["{ALL_SOURCE}"]
+severity = "high"
+fp_risk  = "low"
+category = "ai-slop"
+notes    = "(Source: ...) or (PMC12345) in code comments = hallucinated authority"
+
+[rule.G142]
+name     = "Markdown tables in docstrings"
+pattern  = "{MD_TABLE_ROW}"
+files    = ["{SWIFT}", "*.{ts,js,rs}"]
+severity = "high"
+fp_risk  = "low"
+category = "ai-slop"
+notes    = "No human writes ASCII tables inside /// doc comments"
+
+[rule.G143]
+name     = "File/view summary comment"
+pattern  = "{FILE_SUMMARY}"
+files    = ["{ALL_SOURCE}"]
+severity = "medium"
+fp_risk  = "low"
+category = "ai-slop"
+notes    = "This file defines/implements/provides — tautological self-description"
+
+[rule.G144]
+name      = "Generic TODO without ticket"
+pattern   = "{GENERIC_TODO}"
+files     = ["{ALL_SOURCE}"]
+severity  = "medium"
+fp_risk   = "medium"
+category  = "ai-slop"
+notes     = "Flag 3+ generic TODOs per file. Single TODO is human; density is AI"
+mode      = "co-occurrence"
+threshold = 3
+
+[rule.G145]
+name     = "Explanatory comment before obvious code"
+pattern  = "{OBVIOUS_COMMENT}"
+files    = ["{ALL_SOURCE}"]
+severity = "low"
+fp_risk  = "medium"
+category = "ai-slop"
+notes    = "// The user is authenticated — narrating what code already says. Narrowed to // not ///"
+two_pass = true
